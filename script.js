@@ -7,8 +7,12 @@ const siteCards = document.querySelectorAll('.site-card');
 let currentEditTarget = null;
 let currentEditCategory = null;
 
+// 数据版本
+const DATA_VERSION = '1.1.0';
+
 // 默认数据结构
 let navigationData = {
+    version: DATA_VERSION,
     categories: {
         personal: {
             name: '个人主页',
@@ -74,6 +78,30 @@ let navigationData = {
                     icon: 'fas fa-robot',
                     color: '#FF6B35',
                     isNew: true
+                },
+                {
+                    id: 'seaf-build',
+                    name: '构建端',
+                    desc: 'Seaf构建管理平台',
+                    url: 'http://11.123.252.212:30080/',
+                    icon: 'fas fa-tools',
+                    color: '#10B981'
+                },
+                {
+                    id: 'seaf-user-new',
+                    name: '用户端',
+                    desc: 'Seaf用户操作平台',
+                    url: 'http://11.123.252.212:30080/seafUser',
+                    icon: 'fas fa-users',
+                    color: '#3B82F6'
+                },
+                {
+                    id: 'seaf-management',
+                    name: '管理端',
+                    desc: 'Seaf系统管理平台',
+                    url: 'http://11.123.252.212:30080/seafManagement',
+                    icon: 'fas fa-cogs',
+                    color: '#8B5CF6'
                 }
             ]
         },
@@ -140,7 +168,17 @@ function saveData() {
 function loadData() {
     const saved = localStorage.getItem('pm-navigation-data');
     if (saved) {
-        navigationData = JSON.parse(saved);
+        const savedData = JSON.parse(saved);
+        // 检查版本，如果版本不匹配则使用默认数据并保存
+        if (savedData.version !== DATA_VERSION) {
+            console.log('数据版本已更新，使用新的默认数据');
+            saveData();
+        } else {
+            navigationData = savedData;
+        }
+    } else {
+        // 首次访问，保存默认数据
+        saveData();
     }
 }
 
