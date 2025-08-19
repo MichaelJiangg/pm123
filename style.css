@@ -34,6 +34,11 @@ body {
     padding: 40px;
     box-shadow: 0 2px 16px rgba(31, 35, 41, 0.08);
     border: 1px solid #e5e6eb;
+    text-align: center;
+}
+
+.header-main {
+    width: 100%;
 }
 
 .logo {
@@ -91,6 +96,88 @@ body {
     box-shadow: 0 2px 8px rgba(51, 112, 255, 0.24);
 }
 
+/* 更多菜单样式 */
+.category-more,
+.card-more {
+    position: relative;
+    display: inline-block;
+}
+
+.more-btn {
+    background: transparent;
+    border: none;
+    color: #646a73;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateX(10px);
+}
+
+.category-header:hover .more-btn,
+.site-card-wrapper:hover .more-btn {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.more-btn:hover {
+    background: #f5f5f5;
+    color: #1f2329;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e6eb;
+    padding: 6px 0;
+    min-width: 120px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.category-more:hover .dropdown-menu,
+.card-more:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #1f2329;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+.dropdown-item.delete {
+    color: #f44336;
+}
+
+.dropdown-item.delete:hover {
+    background: #ffebee;
+}
+
+.dropdown-item i {
+    width: 14px;
+    text-align: center;
+}
+
 /* 主内容区域 */
 .main-content {
     flex: 1;
@@ -122,11 +209,78 @@ body {
     filter: drop-shadow(0 1px 2px rgba(51, 112, 255, 0.15));
 }
 
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.category-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.edit-category-btn,
+.delete-category-btn,
+.add-item-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.edit-category-btn {
+    background: #f0f4ff;
+    color: #3370ff;
+}
+
+.edit-category-btn:hover {
+    background: #e8f0ff;
+}
+
+.delete-category-btn {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.delete-category-btn:hover {
+    background: #ffcdd2;
+}
+
+.add-item-btn {
+    background: #e8f5e8;
+    color: #4caf50;
+}
+
+.add-item-btn:hover {
+    background: #c8e6c9;
+}
+
 /* 网站卡片网格 */
 .sites-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
+}
+
+.site-card-wrapper {
+    position: relative;
+}
+
+.card-more {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
 }
 
 .site-card {
@@ -366,4 +520,142 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #3370ff;
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e6eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1f2329;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.close {
+    color: #646a73;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.close:hover {
+    background: #f5f5f5;
+    color: #1f2329;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #1f2329;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e6eb;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3370ff;
+    box-shadow: 0 0 0 3px rgba(51, 112, 255, 0.1);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-actions button[type="button"] {
+    background: #f5f5f5;
+    color: #646a73;
+}
+
+.modal-actions button[type="button"]:hover {
+    background: #e5e6eb;
+}
+
+.modal-actions button[type="submit"] {
+    background: #3370ff;
+    color: white;
+}
+
+.modal-actions button[type="submit"]:hover {
+    background: #2757ff;
+    transform: translateY(-1px);
 }

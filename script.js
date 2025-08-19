@@ -3,8 +3,126 @@ const tabButtons = document.querySelectorAll('.tab-btn');
 const categorySecti ons = document.querySelectorAll('.category-section');
 const siteCards = document.querySelectorAll('.site-card');
 
+// 编辑状态
+let currentEditTarget = null;
+let currentEditCategory = null;
+
+// 默认数据结构
+let navigationData = {
+    categories: {
+        personal: {
+            name: '个人主页',
+            icon: 'fas fa-user',
+            items: [
+                {
+                    id: 'knowledge',
+                    name: '知识主页',
+                    desc: '个人知识库与学习记录',
+                    url: 'https://qg27o4ipzn.feishu.cn/wiki/JdH0wbiGmi4DS9kpm2lcRj0hn8g',
+                    icon: 'fas fa-book-open',
+                    color: '#00C896'
+                },
+                {
+                    id: 'weekly',
+                    name: '每周工作',
+                    desc: '工作计划与进度跟踪',
+                    url: 'https://qg27o4ipzn.feishu.cn/wiki/PlL1wYwUdij7XKkSlRpcvX4inDe',
+                    icon: 'fas fa-calendar-week',
+                    color: '#3370FF'
+                }
+            ]
+        },
+        docs: {
+            name: '需求文档',
+            icon: 'fas fa-file-alt',
+            items: [
+                {
+                    id: 'seaf-docs',
+                    name: 'Seaf',
+                    desc: '项目文档与知识库',
+                    url: 'https://geelib.qihoo.net/geelib/knowledge/doc?spaceId=3333&docId=260707',
+                    icon: 'fas fa-layer-group',
+                    color: '#00C896'
+                },
+                {
+                    id: 'qpaas-docs',
+                    name: 'QPaaS',
+                    desc: '平台即服务文档',
+                    url: 'https://geelib.qihoo.net/geelib/knowledge/doc?spaceId=1626&docId=253043',
+                    icon: 'fas fa-cubes',
+                    color: '#3370FF'
+                }
+            ]
+        },
+        products: {
+            name: '产品主页',
+            icon: 'fas fa-cube',
+            items: [
+                {
+                    id: 'seaf-user',
+                    name: 'Seaf用户侧',
+                    desc: '用户管理与服务平台',
+                    url: 'http://10.236.19.13/login',
+                    icon: 'fas fa-shield-alt',
+                    color: '#7C3AED'
+                },
+                {
+                    id: 'ai-platform',
+                    name: 'AI应用智能搭建平台',
+                    desc: '智能化AI应用开发平台',
+                    url: 'http://11.121.243.127/',
+                    icon: 'fas fa-robot',
+                    color: '#FF6B35',
+                    isNew: true
+                }
+            ]
+        },
+        design: {
+            name: '设计稿',
+            icon: 'fas fa-palette',
+            items: [
+                {
+                    id: 'seaf-user-design',
+                    name: 'Seaf 用户侧',
+                    desc: 'AI智能体协作平台用户端设计',
+                    url: 'https://www.figma.com/design/b5KIDpU2E7LOKoyRUu5nez/AI%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E5%B9%B3%E5%8F%B0-%E7%94%A8%E6%88%B7%E4%BE%A7?node-id=1053-54283&p=f&t=BCjuD7HO0JUeVeZ7-0',
+                    icon: 'fab fa-figma',
+                    color: '#00C896'
+                },
+                {
+                    id: 'seaf-builder-design',
+                    name: 'Seaf构建侧',
+                    desc: '构建者平台设计原型',
+                    url: 'https://www.figma.com/design/RIhycrd4WBS8Qv7BaHeg4n/%E6%9E%84%E5%BB%BA%E8%80%85%E5%B9%B3%E5%8F%B0?node-id=0-1&t=jRuLf9AYIEzeFaU0-1',
+                    icon: 'fab fa-figma',
+                    color: '#3370FF'
+                },
+                {
+                    id: 'seaf-admin-design',
+                    name: 'Seaf 管理侧',
+                    desc: '管理端界面设计方案',
+                    url: 'https://mastergo.360zqaq.net/files/project/165912562415716?org_id=91063446405121',
+                    icon: 'fas fa-pencil-ruler',
+                    color: '#7C3AED'
+                },
+                {
+                    id: 'qpaas-design',
+                    name: 'QPaaS',
+                    desc: 'QPaaS 设计方案原型',
+                    url: 'https://www.figma.com/design/084hgsayMkPwlZ66oFjkGy/QPaaS-%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88?node-id=725-7319&p=f&t=CGgwNqEalYTUsXIF-0',
+                    icon: 'fab fa-figma',
+                    color: '#F24E1E'
+                }
+            ]
+        }
+    }
+};
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    renderContent();
+    
     // 为标签按钮添加事件监听
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -12,8 +130,115 @@ document.addEventListener('DOMContentLoaded', function() {
             switchCategory(category, button);
         });
     });
+});
 
-    // 添加卡片悬停效果增强
+// 数据持久化
+function saveData() {
+    localStorage.setItem('pm-navigation-data', JSON.stringify(navigationData));
+}
+
+function loadData() {
+    const saved = localStorage.getItem('pm-navigation-data');
+    if (saved) {
+        navigationData = JSON.parse(saved);
+    }
+}
+
+// 渲染内容
+function renderContent() {
+    const mainContent = document.querySelector('.main-content');
+    mainContent.innerHTML = '';
+    
+    Object.keys(navigationData.categories).forEach(categoryKey => {
+        const category = navigationData.categories[categoryKey];
+        const section = createCategorySection(categoryKey, category);
+        mainContent.appendChild(section);
+    });
+    
+    // 重新绑定事件
+    bindEvents();
+}
+
+// 创建分类区域
+function createCategorySection(categoryKey, category) {
+    const section = document.createElement('section');
+    section.className = 'category-section';
+    section.dataset.category = categoryKey;
+    
+    section.innerHTML = `
+        <div class="category-header">
+            <h2 class="category-title">
+                <i class="${category.icon}"></i>
+                ${category.name}
+            </h2>
+            <div class="category-more">
+                <button class="more-btn">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item" onclick="addItem('${categoryKey}')">
+                        <i class="fas fa-plus"></i>
+                        新建
+                    </div>
+                    <div class="dropdown-item" onclick="editCategory('${categoryKey}')">
+                        <i class="fas fa-edit"></i>
+                        编辑
+                    </div>
+                    <div class="dropdown-item delete" onclick="deleteCategory('${categoryKey}')">
+                        <i class="fas fa-trash"></i>
+                        删除
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sites-grid">
+            ${category.items.map(item => createSiteCard(item, categoryKey)).join('')}
+        </div>
+    `;
+    
+    return section;
+}
+
+// 创建网站卡片
+function createSiteCard(item, categoryKey) {
+    const newBadge = item.isNew ? '<span class="new-badge">new</span>' : '';
+    
+    return `
+        <div class="site-card-wrapper">
+            <a href="${item.url}" target="_blank" class="site-card">
+                <div class="site-icon">
+                    <i class="${item.icon}" style="color: ${item.color};"></i>
+                </div>
+                <div class="site-info">
+                    <h3 class="site-name">
+                        ${item.name}
+                        ${newBadge}
+                    </h3>
+                    <p class="site-desc">${item.desc}</p>
+                </div>
+            </a>
+            <div class="card-more">
+                <button class="more-btn">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item" onclick="editCard('${item.id}')">
+                        <i class="fas fa-edit"></i>
+                        编辑
+                    </div>
+                    <div class="dropdown-item delete" onclick="deleteCard('${item.id}')">
+                        <i class="fas fa-trash"></i>
+                        删除
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 绑定事件
+function bindEvents() {
+    const siteCards = document.querySelectorAll('.site-card');
     siteCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-8px) scale(1.02)';
@@ -22,33 +247,20 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0) scale(1)';
         });
-        
-        // 添加点击反馈效果
-        card.addEventListener('mousedown', function() {
-            this.style.transform = 'translateY(-2px) scale(0.98)';
-        });
-        
-        card.addEventListener('mouseup', function() {
-            this.style.transform = 'translateY(-8px) scale(1.02)';
-        });
     });
-});
+}
 
 // 分类切换功能
 function switchCategory(category, activeButton) {
-    // 移除所有按钮的激活状态
     tabButtons.forEach(btn => btn.classList.remove('active'));
-    
-    // 激活当前按钮
     activeButton.classList.add('active');
 
-    // 显示/隐藏对应的分类内容
+    const categorySecti ons = document.querySelectorAll('.category-section');
     categorySecti ons.forEach(section => {
         const sectionCategory = section.dataset.category;
         
         if (category === 'all' || sectionCategory === category) {
             section.classList.remove('hidden');
-            // 添加淡入动画
             section.style.opacity = '0';
             section.style.transform = 'translateY(20px)';
             
@@ -61,66 +273,213 @@ function switchCategory(category, activeButton) {
             section.classList.add('hidden');
         }
     });
-
-
 }
 
 
 
+// 添加分类
+function addCategory() {
+    currentEditCategory = null;
+    document.getElementById('categoryModalTitle').textContent = '添加分类';
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryIcon').value = 'fas fa-star';
+    document.getElementById('categoryModal').style.display = 'block';
+}
 
+// 编辑分类
+function editCategory(categoryKey) {
+    currentEditCategory = categoryKey;
+    const category = navigationData.categories[categoryKey];
+    
+    document.getElementById('categoryModalTitle').textContent = '编辑分类';
+    document.getElementById('categoryName').value = category.name;
+    document.getElementById('categoryIcon').value = category.icon;
+    document.getElementById('categoryModal').style.display = 'block';
+}
 
-// 添加网站访问统计（本地存储）
+// 删除分类
+function deleteCategory(categoryKey) {
+    if (confirm('确定要删除这个分类吗？删除后该分类下的所有内容都将丢失。')) {
+        delete navigationData.categories[categoryKey];
+        saveData();
+        renderContent();
+        updateCategoryTabs();
+    }
+}
+
+// 添加项目
+function addItem(categoryKey) {
+    currentEditTarget = null;
+    currentEditCategory = categoryKey;
+    
+    document.getElementById('modalTitle').textContent = '添加链接';
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemDesc').value = '';
+    document.getElementById('itemUrl').value = '';
+    document.getElementById('itemIcon').value = 'fas fa-link';
+    document.getElementById('itemColor').value = '#3370FF';
+    document.getElementById('editModal').style.display = 'block';
+}
+
+// 编辑卡片
+function editCard(itemId) {
+    // 查找项目
+    let foundItem = null;
+    let foundCategory = null;
+    
+    Object.keys(navigationData.categories).forEach(categoryKey => {
+        const category = navigationData.categories[categoryKey];
+        const item = category.items.find(item => item.id === itemId);
+        if (item) {
+            foundItem = item;
+            foundCategory = categoryKey;
+        }
+    });
+    
+    if (foundItem) {
+        currentEditTarget = itemId;
+        currentEditCategory = foundCategory;
+        
+        document.getElementById('modalTitle').textContent = '编辑链接';
+        document.getElementById('itemName').value = foundItem.name;
+        document.getElementById('itemDesc').value = foundItem.desc;
+        document.getElementById('itemUrl').value = foundItem.url;
+        document.getElementById('itemIcon').value = foundItem.icon;
+        document.getElementById('itemColor').value = foundItem.color;
+        document.getElementById('editModal').style.display = 'block';
+    }
+}
+
+// 删除卡片
+function deleteCard(itemId) {
+    if (confirm('确定要删除这个链接吗？')) {
+        Object.keys(navigationData.categories).forEach(categoryKey => {
+            const category = navigationData.categories[categoryKey];
+            category.items = category.items.filter(item => item.id !== itemId);
+        });
+        saveData();
+        renderContent();
+    }
+}
+
+// 关闭模态框
+function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+}
+
+// 表单提交
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('itemName').value;
+    const desc = document.getElementById('itemDesc').value;
+    const url = document.getElementById('itemUrl').value;
+    const icon = document.getElementById('itemIcon').value;
+    const color = document.getElementById('itemColor').value;
+    
+    const itemData = {
+        id: currentEditTarget || Date.now().toString(),
+        name,
+        desc,
+        url,
+        icon,
+        color
+    };
+    
+    if (currentEditTarget) {
+        // 编辑现有项目
+        const category = navigationData.categories[currentEditCategory];
+        const itemIndex = category.items.findIndex(item => item.id === currentEditTarget);
+        if (itemIndex !== -1) {
+            category.items[itemIndex] = { ...category.items[itemIndex], ...itemData };
+        }
+    } else {
+        // 添加新项目
+        navigationData.categories[currentEditCategory].items.push(itemData);
+    }
+    
+    saveData();
+    renderContent();
+    closeModal();
+});
+
+document.getElementById('categoryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('categoryName').value;
+    const icon = document.getElementById('categoryIcon').value;
+    
+    if (currentEditCategory) {
+        // 编辑现有分类
+        navigationData.categories[currentEditCategory].name = name;
+        navigationData.categories[currentEditCategory].icon = icon;
+    } else {
+        // 添加新分类
+        const categoryKey = name.toLowerCase().replace(/\s+/g, '-');
+        navigationData.categories[categoryKey] = {
+            name,
+            icon,
+            items: []
+        };
+    }
+    
+    saveData();
+    renderContent();
+    updateCategoryTabs();
+    closeCategoryModal();
+});
+
+// 更新分类标签
+function updateCategoryTabs() {
+    const categoryTabs = document.querySelector('.category-tabs');
+    const addBtn = categoryTabs.querySelector('.add-category-btn');
+    
+    // 清除现有标签（除了全部和添加按钮）
+    const existingTabs = categoryTabs.querySelectorAll('.tab-btn:not([data-category="all"])');
+    existingTabs.forEach(tab => tab.remove());
+    
+    // 添加新标签
+    Object.keys(navigationData.categories).forEach(categoryKey => {
+        const category = navigationData.categories[categoryKey];
+        const button = document.createElement('button');
+        button.className = 'tab-btn';
+        button.dataset.category = categoryKey;
+        button.innerHTML = `
+            <i class="${category.icon}"></i>
+            ${category.name}
+        `;
+        button.addEventListener('click', () => {
+            switchCategory(categoryKey, button);
+        });
+        categoryTabs.insertBefore(button, addBtn);
+    });
+}
+
+// 网站访问统计
 function trackSiteVisit(siteName, siteUrl) {
     let visits = JSON.parse(localStorage.getItem('siteVisits') || '{}');
     visits[siteName] = (visits[siteName] || 0) + 1;
     localStorage.setItem('siteVisits', JSON.stringify(visits));
 }
 
-// 为所有网站卡片添加统计
-document.addEventListener('DOMContentLoaded', function() {
-    const siteCards = document.querySelectorAll('.site-card');
+// 点击外部关闭模态框
+window.onclick = function(event) {
+    const editModal = document.getElementById('editModal');
+    const categoryModal = document.getElementById('categoryModal');
     
-    siteCards.forEach(card => {
-        card.addEventListener('click', function() {
-            const siteName = this.querySelector('.site-name').textContent;
-            const siteUrl = this.href;
-            
-            trackSiteVisit(siteName, siteUrl);
-        });
-    });
-});
-
-// 添加平滑滚动效果
-function smoothScrollTo(element) {
-    element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
-}
-
-// 主题切换功能（可选）
-function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.contains('dark-theme');
-    
-    if (isDark) {
-        body.classList.remove('dark-theme');
-        localStorage.setItem('theme', 'light');
-    } else {
-        body.classList.add('dark-theme');
-        localStorage.setItem('theme', 'dark');
+    if (event.target === editModal) {
+        closeModal();
+    }
+    if (event.target === categoryModal) {
+        closeCategoryModal();
     }
 }
 
-// 加载保存的主题
-document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
-    }
-});
-
-// 添加页面加载动画
+// 页面加载动画
 window.addEventListener('load', function() {
     const cards = document.querySelectorAll('.site-card');
     
@@ -136,7 +495,7 @@ window.addEventListener('load', function() {
     });
 });
 
-// 响应式菜单处理（移动端）
+// 响应式菜单处理
 function handleMobileMenu() {
     const tabs = document.querySelector('.category-tabs');
     const isSmallScreen = window.innerWidth <= 768;
@@ -150,6 +509,5 @@ function handleMobileMenu() {
     }
 }
 
-// 监听窗口大小变化
 window.addEventListener('resize', handleMobileMenu);
 document.addEventListener('DOMContentLoaded', handleMobileMenu);
