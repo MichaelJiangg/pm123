@@ -8,7 +8,7 @@ let currentEditTarget = null;
 let currentEditCategory = null;
 
 // 数据版本
-const DATA_VERSION = '1.2.0';
+const DATA_VERSION = '1.2.1';
 
 // 默认数据结构
 let navigationData = {
@@ -160,8 +160,16 @@ let navigationData = {
     }
 };
 
+// 调试函数 - 清除localStorage
+function clearLocalStorage() {
+    localStorage.removeItem('pm-navigation-data');
+    console.log('localStorage已清除，刷新页面查看最新数据');
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('当前数据版本:', DATA_VERSION);
+    console.log('默认数据包含的类别:', Object.keys(navigationData.categories));
     loadData();
     renderContent();
     
@@ -186,6 +194,8 @@ function loadData() {
         // 检查版本，如果版本不匹配则使用默认数据并保存
         if (savedData.version !== DATA_VERSION) {
             console.log('数据版本已更新，使用新的默认数据');
+            // 清除旧数据，使用新的默认数据
+            localStorage.removeItem('pm-navigation-data');
             saveData();
         } else {
             navigationData = savedData;
