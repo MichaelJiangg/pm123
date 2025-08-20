@@ -1,6 +1,6 @@
 // DOM 元素
 const tabButtons = document.querySelectorAll('.tab-btn');
-const categorySecti ons = document.querySelectorAll('.category-section');
+const categorySections = document.querySelectorAll('.category-section');
 const siteCards = document.querySelectorAll('.site-card');
 
 // 编辑状态
@@ -317,8 +317,8 @@ function switchCategory(category, activeButton) {
     tabButtons.forEach(btn => btn.classList.remove('active'));
     activeButton.classList.add('active');
 
-    const categorySecti ons = document.querySelectorAll('.category-section');
-    categorySecti ons.forEach(section => {
+    const categorySections = document.querySelectorAll('.category-section');
+    categorySections.forEach(section => {
         const sectionCategory = section.dataset.category;
         
         if (category === 'all' || sectionCategory === category) {
