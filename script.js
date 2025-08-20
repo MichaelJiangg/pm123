@@ -8,7 +8,7 @@ let currentEditTarget = null;
 let currentEditCategory = null;
 
 // 数据版本
-const DATA_VERSION = '1.2.1';
+const DATA_VERSION = '2.0.0';
 
 // 默认数据结构
 let navigationData = {
@@ -166,6 +166,12 @@ function clearLocalStorage() {
     console.log('localStorage已清除，刷新页面查看最新数据');
 }
 
+// 全局重置函数 - 完全重新初始化
+function resetAll() {
+    resetToDefaults();
+    location.reload(); // 重新加载页面
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('当前数据版本:', DATA_VERSION);
@@ -190,20 +196,33 @@ function saveData() {
 function loadData() {
     const saved = localStorage.getItem('pm-navigation-data');
     if (saved) {
-        const savedData = JSON.parse(saved);
-        // 检查版本，如果版本不匹配则使用默认数据并保存
-        if (savedData.version !== DATA_VERSION) {
-            console.log('数据版本已更新，使用新的默认数据');
-            // 清除旧数据，使用新的默认数据
-            localStorage.removeItem('pm-navigation-data');
-            saveData();
-        } else {
-            navigationData = savedData;
+        try {
+            const savedData = JSON.parse(saved);
+            // 检查版本，如果版本不匹配则重新初始化
+            if (savedData.version !== DATA_VERSION) {
+                console.log('数据版本已更新至 v' + DATA_VERSION + '，重新初始化存储数据');
+                resetToDefaults();
+            } else {
+                navigationData = savedData;
+                console.log('加载已保存的数据，版本:', savedData.version);
+            }
+        } catch (error) {
+            console.warn('localStorage数据解析失败，重新初始化:', error);
+            resetToDefaults();
         }
     } else {
-        // 首次访问，保存默认数据
-        saveData();
+        // 首次访问，初始化默认数据
+        console.log('首次访问，初始化默认数据');
+        resetToDefaults();
     }
+}
+
+// 重置为默认数据
+function resetToDefaults() {
+    localStorage.removeItem('pm-navigation-data');
+    localStorage.removeItem('siteVisits'); // 同时清除访问统计
+    console.log('已清除所有存储数据，使用默认配置');
+    saveData();
 }
 
 // 渲染内容
