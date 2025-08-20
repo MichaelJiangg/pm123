@@ -8,7 +8,7 @@ let currentEditTarget = null;
 let currentEditCategory = null;
 
 // 数据版本
-const DATA_VERSION = '2.0.0';
+const DATA_VERSION = '2.1.0';
 
 // 默认数据结构
 let navigationData = {
