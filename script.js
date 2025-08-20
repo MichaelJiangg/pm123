@@ -8,7 +8,7 @@ let currentEditTarget = null;
 let currentEditCategory = null;
 
 // 数据版本
-const DATA_VERSION = '1.1.0';
+const DATA_VERSION = '1.2.0';
 
 // 默认数据结构
 let navigationData = {
@@ -140,6 +140,20 @@ let navigationData = {
                     url: 'https://www.figma.com/design/084hgsayMkPwlZ66oFjkGy/QPaaS-%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88?node-id=725-7319&p=f&t=CGgwNqEalYTUsXIF-0',
                     icon: 'fab fa-figma',
                     color: '#F24E1E'
+                }
+            ]
+        },
+        entertainment: {
+            name: '娱乐休闲',
+            icon: 'fas fa-gamepad',
+            items: [
+                {
+                    id: 'qihoo-bbs',
+                    name: '360 人',
+                    desc: '360内部社区论坛',
+                    url: 'http://bbs.qihoo.net/',
+                    icon: 'fas fa-users',
+                    color: '#FF6B35'
                 }
             ]
         }
