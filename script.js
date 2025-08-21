@@ -8,7 +8,13 @@ let currentEditTarget = null;
 let currentEditCategory = null;
 
 // 数据版本
-const DATA_VERSION = '2.1.1';
+const DATA_VERSION = '2.3.0';
+
+// 密码验证相关
+const PASSWORD_HASH = 'f313357baa4b762ebd351e2fbdcd8875c25744a6468f82b0491b2b47b24dac1b'; 
+const AUTH_TIMEOUT = 30 * 60 * 1000; // 30分钟 = 30 * 60 * 1000 毫秒
+let isAuthenticated = false;
+let authTimer = null;
 
 // 默认数据结构
 let navigationData = {
@@ -160,6 +166,150 @@ let navigationData = {
     }
 };
 
+// 密码验证函数
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hash));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyPassword(inputPassword) {
+    const hashedInput = await hashPassword(inputPassword);
+    return hashedInput === PASSWORD_HASH;
+}
+
+function showPasswordError(message) {
+    const errorElement = document.getElementById('passwordError');
+    errorElement.textContent = message;
+    errorElement.classList.add('show');
+    setTimeout(() => {
+        errorElement.classList.remove('show');
+    }, 3000);
+}
+
+function hidePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('password-locked');
+    isAuthenticated = true;
+    
+    // 保存认证状态和时间戳到sessionStorage
+    const authData = {
+        status: 'authenticated',
+        timestamp: Date.now()
+    };
+    sessionStorage.setItem('pm-auth-status', JSON.stringify(authData));
+    
+    // 启动定时检查
+    startAuthTimer();
+}
+
+function showPasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('password-locked');
+    // 聚焦到密码输入框
+    setTimeout(() => {
+        document.getElementById('passwordInput').focus();
+    }, 100);
+}
+
+function checkAuthStatus() {
+    // 检查会话级别的认证状态和时间戳
+    const authDataStr = sessionStorage.getItem('pm-auth-status');
+    if (!authDataStr) {
+        return false;
+    }
+    
+    try {
+        const authData = JSON.parse(authDataStr);
+        const currentTime = Date.now();
+        const timeDiff = currentTime - authData.timestamp;
+        
+        // 检查是否超过30分钟
+        if (authData.status === 'authenticated' && timeDiff < AUTH_TIMEOUT) {
+            isAuthenticated = true;
+            // 如果还在有效期内，启动定时器
+            startAuthTimer();
+            return true;
+        } else {
+            // 超时或状态无效，清除认证状态
+            clearAuthStatus();
+            return false;
+        }
+    } catch (error) {
+        console.warn('认证状态数据解析失败:', error);
+        clearAuthStatus();
+        return false;
+    }
+}
+
+// 认证定时器管理
+function startAuthTimer() {
+    // 清除已有的定时器
+    if (authTimer) {
+        clearTimeout(authTimer);
+    }
+    
+    // 计算距离过期还有多长时间
+    const authDataStr = sessionStorage.getItem('pm-auth-status');
+    if (!authDataStr) return;
+    
+    try {
+        const authData = JSON.parse(authDataStr);
+        const currentTime = Date.now();
+        const timeDiff = currentTime - authData.timestamp;
+        const remainingTime = AUTH_TIMEOUT - timeDiff;
+        
+        if (remainingTime > 0) {
+            // 设置定时器，在剩余时间后执行检查
+            authTimer = setTimeout(() => {
+                console.log('认证超时，需要重新登录');
+                forceReauth();
+            }, remainingTime);
+            
+            console.log(`认证定时器已启动，${Math.round(remainingTime / 1000 / 60)}分钟后过期`);
+        } else {
+            // 已经过期
+            forceReauth();
+        }
+    } catch (error) {
+        console.warn('启动认证定时器失败:', error);
+        forceReauth();
+    }
+}
+
+function clearAuthStatus() {
+    isAuthenticated = false;
+    sessionStorage.removeItem('pm-auth-status');
+    if (authTimer) {
+        clearTimeout(authTimer);
+        authTimer = null;
+    }
+}
+
+function forceReauth() {
+    console.log('强制重新认证');
+    clearAuthStatus();
+    showPasswordModal();
+    // 可以显示一个提示信息
+    setTimeout(() => {
+        showPasswordError('登录已过期，请重新输入密码');
+    }, 500);
+}
+
+// 页面可见性检查（当用户切换回页面时检查认证状态）
+function handleVisibilityChange() {
+    if (!document.hidden && isAuthenticated) {
+        // 页面重新可见时检查认证状态
+        if (!checkAuthStatus()) {
+            forceReauth();
+        }
+    }
+}
+
 // 调试函数 - 清除localStorage
 function clearLocalStorage() {
     localStorage.removeItem('pm-navigation-data');
@@ -176,6 +326,67 @@ function resetAll() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('当前数据版本:', DATA_VERSION);
     console.log('默认数据包含的类别:', Object.keys(navigationData.categories));
+    
+    // 检查认证状态
+    if (!checkAuthStatus()) {
+        showPasswordModal();
+    } else {
+        // 已认证，正常初始化
+        initializeApp();
+    }
+    
+    // 密码表单事件监听
+    const passwordForm = document.getElementById('passwordForm');
+    passwordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const passwordInput = document.getElementById('passwordInput');
+        const password = passwordInput.value.trim();
+        
+        if (!password) {
+            showPasswordError('请输入密码');
+            return;
+        }
+        
+        // 显示加载状态
+        const submitBtn = document.querySelector('.password-submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 验证中...';
+        submitBtn.disabled = true;
+        
+        try {
+            const isValid = await verifyPassword(password);
+            if (isValid) {
+                hidePasswordModal();
+                initializeApp();
+                passwordInput.value = ''; // 清空密码输入框
+            } else {
+                showPasswordError('密码错误，请重试');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        } catch (error) {
+            console.error('密码验证出错:', error);
+            showPasswordError('验证失败，请重试');
+        } finally {
+            // 恢复按钮状态
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // 支持Enter键提交
+    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            passwordForm.dispatchEvent(new Event('submit'));
+        }
+    });
+    
+    // 监听页面可见性变化
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+});
+
+// 应用初始化函数
+function initializeApp() {
     loadData();
     renderContent();
     
@@ -186,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
             switchCategory(category, button);
         });
     });
-});
+}
 
 // 数据持久化
 function saveData() {

@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="password-locked">
     <div class="container">
         <!-- 头部 -->
         <header class="header">
@@ -360,6 +360,28 @@
                         <button type="button" onclick="closeCategoryModal()">取消</button>
                         <button type="submit">保存</button>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密码验证弹窗 -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <div class="password-modal-header">
+                <h2>身份验证</h2>
+                <p>请输入访问密码</p>
+            </div>
+            <div class="password-modal-body">
+                <form id="passwordForm">
+                    <div class="password-form-group">
+                        <input type="password" id="passwordInput" placeholder="请输入密码" required>
+                        <button type="submit" class="password-submit-btn">
+                            <i class="fas fa-unlock"></i>
+                            验证
+                        </button>
+                    </div>
+                    <div id="passwordError" class="password-error"></div>
                 </form>
             </div>
         </div>
